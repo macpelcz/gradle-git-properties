@@ -49,7 +49,6 @@ class GitPropertiesPlugin implements Plugin<Project> {
 
         @TaskAction
         void generate() {
-            def repo = Grgit.open(dir: project.gitProperties.gitRepositoryRoot ?: project.rootProject.file('.'))
             def dir = project.gitProperties.gitPropertiesDir ?: new File(project.buildDir, "resources/main")
             def file = new File(dir, "git.properties")
             def keys = project.gitProperties.keys ?: ['git.branch', 'git.commit.id', 'git.commit.id.abbrev', 'git.commit.user.name', 'git.commit.user.email', 'git.commit.message.short', 'git.commit.message.full', 'git.commit.time']
@@ -61,19 +60,35 @@ class GitPropertiesPlugin implements Plugin<Project> {
             }
             assert file.createNewFile()
             logger.info "writing to [${file}]"
-            def map = ["git.branch"                : repo.branch.current.name
-                       , "git.commit.id"           : repo.head().id
-                       , "git.commit.id.abbrev"    : repo.head().abbreviatedId
-                       , "git.commit.user.name"    : repo.head().author.name
-                       , "git.commit.user.email"   : repo.head().author.email
-                       , "git.commit.message.short": repo.head().shortMessage
-                       , "git.commit.message.full" : repo.head().fullMessage
-                       , "git.commit.time"         : formatDate(repo.head().time, project.gitProperties.dateFormat, project.gitProperties.dateFormatTimeZone)]
 
+            def gitMap = readGitInfo(project.gitProperties.gitRepositoryRoot ?: project.rootProject.file('.'))
+
+            def branchValue = System.getenv(project.gitProperties.branchEnvVariable) ?: "missing-value"
+            def commitValue = System.getenv(project.gitProperties.commitEnvVariable) ?: "missing-value"
+
+            def map = gitMap ?: ["git.branch"                : branchValue
+                                , "git.commit.id"           : commitValue]
             file.withWriter('UTF-8') { w ->
                 map.subMap(keys).each { key, value ->
                     w.writeLine "$key=$value"
                 }
+            }
+        }
+
+        def readGitInfo(dir) {
+            try {
+              def repo = Grgit.open(dir: project.gitProperties.gitRepositoryRoot ?: project.rootProject.file('.'))
+              def map = ["git.branch"                : repo.branch.current.name
+                         , "git.commit.id"           : repo.head().id
+                         , "git.commit.id.abbrev"    : repo.head().abbreviatedId
+                         , "git.commit.user.name"    : repo.head().author.name
+                         , "git.commit.user.email"   : repo.head().author.email
+                         , "git.commit.message.short": repo.head().shortMessage
+                         , "git.commit.message.full" : repo.head().fullMessage
+                         , "git.commit.time"         : formatDate(repo.head().time, project.gitProperties.dateFormat, project.gitProperties.dateFormatTimeZone)]
+
+            } catch (all) {
+              logger.info("Problem with reading data from .git repository", all.message)
             }
         }
 
@@ -98,4 +113,6 @@ class GitPropertiesPluginExtension {
     List keys
     String dateFormat
     String dateFormatTimeZone
+    String commitEnvVariable = "BUILD_VCS_NUMBER"
+    String branchEnvVariable = "BUILD_VCS_BRANCH"
 }
