@@ -60,6 +60,19 @@ This is raw `JSON` from `info` endpoint:
 }
 ```
 
+## teamcity
+
+Sometimes the `.git` repository can be missing in your CI build. For example the TeamCity offers the **server-side checkout**. In that case the plugin will read the properties from environment variable.
+
+Example configuration:
+```groovy
+
+gitProperties {
+    commitEnvVariable = "BUILD_VCS_NUMBER"
+    branchEnvVariable = "BUILD_VCS_BRANCH"
+}
+```
+
 ## license
 
 `gradle-git-properties` is Open Source software released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html)
