@@ -70,6 +70,7 @@ Example configuration:
 gitProperties {
     commitEnvVariable = "BUILD_VCS_NUMBER"
     branchEnvVariable = "BUILD_VCS_BRANCH"
+    timeEnvVariable = "BUILD_NUMBER"
 }
 ```
 

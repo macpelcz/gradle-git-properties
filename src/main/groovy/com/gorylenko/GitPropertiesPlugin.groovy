@@ -65,9 +65,11 @@ class GitPropertiesPlugin implements Plugin<Project> {
 
             def branchValue = System.getenv(project.gitProperties.branchEnvVariable) ?: "missing-value"
             def commitValue = System.getenv(project.gitProperties.commitEnvVariable) ?: "missing-value"
+            def timeValue = System.getenv(project.gitProperties.timeEnvVariable) ?: "missing-value"
 
             def map = gitMap ?: ["git.branch"                : branchValue
-                                , "git.commit.id"           : commitValue]
+                                , "git.commit.id"            : commitValue,
+                                , "git.commit.time"          : timeValue]
             file.withWriter('UTF-8') { w ->
                 map.subMap(keys).each { key, value ->
                     w.writeLine "$key=$value"
@@ -115,4 +117,5 @@ class GitPropertiesPluginExtension {
     String dateFormatTimeZone
     String commitEnvVariable = "BUILD_VCS_NUMBER"
     String branchEnvVariable = "BUILD_VCS_BRANCH"
+    String timeEnvVariable = "BUILD_NUMBER"
 }
